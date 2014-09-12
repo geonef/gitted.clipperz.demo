@@ -7,6 +7,8 @@ GITTED_CLIPPERZ_ROOT_DIR=/var/lib/clipperz
 GITTED_CLIPPERZ_UPSTREAM_URL=https://github.com/clipperz/password-manager.git
 GITTED_CLIPPERZ_UPSTREAM_REF=release.2014.06.21
 
+echo TEST___________
+
 mysql_run() {
     echo "MySQL query: $1" >&2
     echo "$1" >&2
