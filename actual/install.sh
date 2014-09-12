@@ -62,13 +62,19 @@ if [ $_count -eq 0 ]; then
     mysql_run "GRANT ALL PRIVILEGES ON clipperz.* TO 'clipperz' "
     mysql_run "FLUSH PRIVILEGES"
 fi
+_count=$(echo "SHOW TABLES" | mysql clipperz | tail -n +2 | wc -l)
+if [ $_count -eq 0 ]; then
+    echo "Populating MySQL database: clipperz"
+    cat /var/lib/clipperz-legacy/database.structure.sql | mysql clipperz
+fi
 
 # Build ClipperZ out of upstream repository
-if [ ! -d $GITTED_CLIPPERZ_ROOT_DIR ]; then
-    git clone -b $GITTED_CLIPPERZ_UPSTREAM_REF \
-        $GITTED_CLIPPERZ_UPSTREAM_URL $GITTED_CLIPPERZ_ROOT_DIR \
-        || nef_fatal "Failed to fetch ClipperZ reference '$GITTED_CLIPPERZ_UPSTREAM_REF' form URL: $GITTED_CLIPPERZ_UPSTREAM_URL"
-    cd $GITTED_CLIPPERZ_ROOT_DIR
-    ./scripts/build install --backends php python --frontends beta gamma \
-        || nef_fatal "Failed to build ClipperZ"
-fi
+# (commented out as we're using clipperz-legacy)
+# if [ ! -d $GITTED_CLIPPERZ_ROOT_DIR ]; then
+#     git clone -b $GITTED_CLIPPERZ_UPSTREAM_REF \
+#         $GITTED_CLIPPERZ_UPSTREAM_URL $GITTED_CLIPPERZ_ROOT_DIR \
+#         || nef_fatal "Failed to fetch ClipperZ reference '$GITTED_CLIPPERZ_UPSTREAM_REF' form URL: $GITTED_CLIPPERZ_UPSTREAM_URL"
+#     cd $GITTED_CLIPPERZ_ROOT_DIR
+#     ./scripts/build install --backends php python --frontends beta gamma \
+#         || nef_fatal "Failed to build ClipperZ"
+# fi
