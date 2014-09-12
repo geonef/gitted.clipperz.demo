@@ -1,0 +1,2 @@
+# Dépôt privé ClipperZ perso
+
