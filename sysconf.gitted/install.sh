@@ -2,9 +2,6 @@
 
 . /usr/lib/sysconf.base/common.sh
 
-[ -x /usr/lib/git-core/git-subtree ] \
-    || ln -s git-subtree-from-sysconf /usr/lib/git-core/git-subtree
-
 # Fix /etc/host with our hostname
 # (and avoid Apache's "apr_sockaddr_info_get() failed" error)
 hostname=$(hostname)
@@ -13,13 +10,22 @@ grep -q "^$hostname " /etc/hosts \
     || echo "$ip $hostname" >>/etc/hosts
 
 # because the sources.list installed by lxc download template doesn't work well
+_old_content="$(cat /etc/apt/sources.list)"
 if grep -vq "deb http://ftp.debian.org/debian/" /etc/apt/sources.list; then
     echo "Fixing packages..."
     echo "deb http://ftp.debian.org/debian/ wheezy main contrib" >/etc/apt/sources.list
-    apt-get update
 fi
 
+apt-cache show git >/dev/null 2>&1 \
+    || apt-get update \
+    || nef_fatal "apt-get failed with status $?"
+
+
 sysconf_require_packages git curl
+
+# Bring our own git-subtree if git is too old to provide it
+[ -x /usr/lib/git-core/git-subtree ] \
+    || ln -s git-subtree-from-sysconf /usr/lib/git-core/git-subtree
 
 # Setup the GIT repository, heart of gitted
 in_private_repos=/local.repository.git
