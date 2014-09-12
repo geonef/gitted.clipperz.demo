@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+
+GITTED_DATA_PATH=gitted/sysconf \
+    /usr/share/gitted/export/sysconf
+
+# GITTED_DATA_PATH=mysql \
+#     GITTED_MYSQL_DATABASE=clipperz \
+#     /usr/share/gitted/import/mysql
