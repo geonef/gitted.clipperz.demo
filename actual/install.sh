@@ -24,8 +24,8 @@ fi
 
 if [ ! -d $GITTED_CLIPPERZ_ROOT_DIR ]; then
     git clone -b $GITTED_CLIPPERZ_UPSTREAM_REF \
-        $GTITTED_CLIPPERZ_UPSTREAM_URL $GITTED_CLIPPERZ_ROOT_DIR \
-        || nef_fatal "Failed to fetch ClipperZ from $GITTED_CLIPPERZ_UPSTREAM_URL, reference = $GITTED_CLIPPERZ_UPSTREAM_REF"
+        $GITTED_CLIPPERZ_UPSTREAM_URL $GITTED_CLIPPERZ_ROOT_DIR \
+        || nef_fatal "Failed to fetch ClipperZ reference '$GITTED_CLIPPERZ_UPSTREAM_REF' form URL: $GITTED_CLIPPERZ_UPSTREAM_URL"
     cd $GITTED_CLIPPERZ_ROOT_DIR
     ./scripts/build install --backends php python --frontends beta gamma \
         || nef_fatal "Failed to build ClipperZ"
