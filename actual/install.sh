@@ -3,9 +3,10 @@
 . /usr/lib/sysconf.base/common.sh
 
 # A few settings
-GITTED_CLIPPERZ_ROOT_DIR=/var/lib/clipperz
-GITTED_CLIPPERZ_UPSTREAM_URL=https://github.com/clipperz/password-manager.git
-GITTED_CLIPPERZ_UPSTREAM_REF=release.2014.06.21
+# (commented out as we're using clipperz-legacy)
+# GITTED_CLIPPERZ_ROOT_DIR=/var/lib/clipperz
+# GITTED_CLIPPERZ_UPSTREAM_URL=https://github.com/clipperz/password-manager.git
+# GITTED_CLIPPERZ_UPSTREAM_REF=release.2014.06.21
 
 mysql_run() {
     echo "MySQL query: $1" >&2
