@@ -23,14 +23,36 @@ _packages="$_packages nginx mysql-server"
 _packages="$_packages php5-fpm"                 # for PHP back-end
 _packages="$_packages python"                   # for Python back-end
 _packages="$_packages python-git"               # for build scripts
-
 sysconf_require_packages $_packages
-rm -f /etc/nginx/sites-enabled/default /etc/php5/fpm/pool.d/www.conf
+
+# Fix Nginx
+_force_nginx_restart=no
+if [ -r /etc/nginx/sites-enabled/default ]; then
+    rm -f /etc/nginx/sites-enabled/default
+    _force_nginx_restart=yes
+fi
 if ps x | grep nginx | grep -vq grep; then
-    service nginx restart
+    if [ $_force_nginx_restart = yes ]; then
+        service nginx restart
+    fi
 else
     service nginx start
 fi
+
+# Fix php-fpm
+_force_fpm_restart=no
+if [ -r /etc/php5/fpm/pool.d/www.conf ]; then
+    rm -f /etc/php5/fpm/pool.d/www.conf
+    _force_fpm_restart=yes
+fi
+if ps x | grep php-fpm | grep -vq grep; then
+    if [ $_force_fpm_restart = yes ]; then
+        service php5-fpm restart
+    fi
+else
+    service php5-fpm start
+fi
+
 
 # Create MySQL database and user for ClipperZ
 mysql_run "CREATE DATABASE IF NOT EXISTS clipperz"
