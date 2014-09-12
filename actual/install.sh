@@ -9,6 +9,7 @@ GITTED_CLIPPERZ_UPSTREAM_REF=release.2014.06.21
 
 mysql_run() {
     echo "MySQL query: $1" >&2
+    echo "$1" >&2
     echo "$1" | mysql
     local _status=${PIPESTATUS[1]}
     if [ $_status -ne 0 ]; then
