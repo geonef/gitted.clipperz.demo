@@ -29,6 +29,7 @@ gitted_command_register() {
 
     [ "${#_argv[@]}" -gt 0 ] && nef_fatal_usage_command init "too many arguments"
 
+    gitted_check_env
     nef_log "Copying $0 to GIT dir..."
     gitted_ensure_script_in_git_dir
 }
@@ -226,6 +227,59 @@ gitted_ensure_script_in_git_dir() {
     # cp $(dirname $0)/gitted-server-setup $gitted_git_dir/
 }
 
+gitted_check_env() {
+    if ! which lxc-create >/dev/null; then
+        nef_log "ERROR: LXC is not installed on your system (lxc-create missing)"
+        nef_log "On a Debian/Ubuntu system, it can be installed with the command:"
+        echo >&2
+        echo "sudo apt-get install lxc" >&2
+        exit 3
+    fi
+    if [ $(id -u) -eq 0 ]; then
+        nef_log "RUNNING AS ROOT! Notice: you can work as an unpriviledged user as well."
+    else
+        user_name=$(id -un)
+        group_name=$(id -gn)
+        error=
+        if ! grep -q "^${user_name}:" /etc/subuid; then
+            error="User '$user_name' misses an entry in /etc/subuid"
+        elif ! grep -q "^${group_name}:" /etc/subgid; then
+            error="User '$user_name' misses an entry in /etc/subuid"
+        elif ! grep -q "^${user_name} " /etc/lxc/lxc-usernet; then
+            error="User '$user_name' misses an entry in /etc/lxc/lxc-usernet"
+        elif ! [ -f ~/.config/lxc/default.conf ]; then
+            error="Missing file '~/.config/lxc/default.conf' with 'id_map' declarations"
+        fi
+
+        if [ -n "$error" ]; then
+            nef_log "Error: $error"
+            nef_log "There are 4 files you need to update (only once) for LXC"
+            nef_log "to run properly as unpriviledged user '$user_name'."
+            nef_log ""
+            nef_log "You can fix them automatically with the commands below:"
+        cat <<MEOF >&2
+
+grep "^${user_name}:" /etc/subuid || sudo sh -c 'echo "${user_name}:100000:65536" >>/etc/subuid'
+grep "^${group_name}:" /etc/subgid || sudo sh -c 'echo "${group_name}:100000:65536" >>/etc/subgid'
+grep "^${user_name} " /etc/lxc/lxc-usernet || sudo sh -c 'echo "${user_name} veth lxcbr0 10" >>/etc/lxc/lxc-usernet'
+
+[ -d ~/.config/lxc ] || mkdir -p ~/.config/lxc
+[ -f ~/.config/lxc/default.conf ] || cat <<EOF >~/.config/lxc/default.conf
+lxc.network.type = veth
+lxc.network.link = lxcbr0
+lxc.network.flags = up
+lxc.network.hwaddr = 00:16:3e:xx:xx:xx
+lxc.id_map = u 0 100000 65536
+lxc.id_map = g 0 100000 65536
+EOF
+
+MEOF
+        exit 3
+        fi
+    fi
+
+}
+
 gitted_list_gitted_remotes() {
     git remote -v \
         | grep -E 'ext::.*/gitted-client +handle-remote-protocol .*(fetch)' \
@@ -235,22 +289,41 @@ gitted_list_gitted_remotes() {
 # usage: gitted_ensure_container_running <name>
 gitted_ensure_container_running() {
     _name="$1"
-    state=$(lxc-info -sHn $_name)
+    state=$(lxc-info -sHn $_name | head -n 1)
+
+    nef_log "Container '$_name' is '$state'"
 
     if [ -z "$state" ]; then
         # [ -d "$engine_dir" ] || nef_fatal "container cannot be created as engine dir is not available: $engine_dir"
         nef_log "LXC container '$_name' does not exist. Creating..."
         lxc-create -n $_name -t download -- -d debian -r wheezy -a amd64 >&2 \
             || nef_fatal "lxc-create failed"
+        state=STOPPED
     fi
 
-    state=$(lxc-info -sHn $_name)
+    if [ $state = STOPPED ]; then
+        nef_log "Starting container in daemon mode..."
+        lxc-start -n $_name -d
+        nef_log "Waiting for a few seconds to let it be ready..."
+        sleep 3
 
-    if [ "$state" = "STOPPED" ]; then
-        nef_log "Container '$_name' is $state. Starting it..."
-        lxc-start -n $_name -d \
-            || nef_fatal "lxc-start failed"
-        sleep 1
+
+        state=$(lxc-info -sHn $_name | head -n 1)
+        [ $state = RUNNING ] || nef_fatal "lxc-start failed; HINT: if you have just installed LXC, just reboot your system and retry..."
+
+        network_ready=
+        while [ "$network_ready" != ok ]; do
+            ip=$(lxc-info -n $_name -i)
+            if [ "$ip" = "" ]; then
+                nef_log "Waiting for the network..."
+                sleep 3
+                network_ready=retry
+            else
+                nef_log "Got IP: $ip"
+                network_ready=ok
+            fi
+        done
+
     fi
 
     if ! lxc-attach --clear-env -n $_name -- test -f /GITTED_CUSTOM_APPLIED; then
@@ -260,8 +333,8 @@ gitted_ensure_container_running() {
 
     lxc-attach --clear-env -n $_name -- test -d /sysconf || {
         nef_log "sysconf is not defined. extracting from commit $gitted_executive_treeish"
-        git archive $gitted_executive_treeish gitted/sysconf/ \
-            | lxc-attach --clear-env -n $_name -- tar x -C / --strip-components=1 >&2
+        git archive $gitted_executive_treeish sysconf/ \
+            | lxc-attach --clear-env -n $_name -- tar x -C / >&2
         lxc-attach --clear-env -n $_name -- \
             /sysconf/sysconf.base/tree/usr/bin/sysconf compile install update \
             2>&1 | nef_log_pipe "sysconf@$_name:"
@@ -330,7 +403,7 @@ gitted_parse_cmdline() {
     gitted_command_function_name="gitted_command_${gitted_command_argv[0]}"
     unset gitted_command_argv[0]
     $gitted_command_function_name "${gitted_command_argv[@]}" \
-        || nef_fatal "command ${gitted_command_argv[0]} returned status $?"
+        || nef_fatal "command ${gitted_command_argv[0]} failed with status $?"
     nef_log -v "Command returned successfully."
 }
 
@@ -348,7 +421,7 @@ nef_log() {
     while [ "$1" != "" ]; do
 
         case "$1" in
-            -p | --prepend) _opt_prepend="$2"; echo "prenddd..$2"; shift; shift ;;
+            -p | --prepend) _opt_prepend="$2"; shift; shift ;;
             -v | --verbose) _opt_verbose=yes; shift ;;
             -d | --debug) _opt_debug=yes; shift ;;
             -*) nef_log "nef_log(): bad option: $1"; shift ;;
