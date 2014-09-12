@@ -7,6 +7,15 @@ GITTED_CLIPPERZ_ROOT_DIR=/var/lib/clipperz
 GITTED_CLIPPERZ_UPSTREAM_URL=https://github.com/clipperz/password-manager.git
 GITTED_CLIPPERZ_UPSTREAM_REF=release.2014.06.21
 
+mysql_run() {
+    echo "MySQL query: $1" >&2
+    echo "$1" | mysql
+    local _status=${PIPESTATUS[1]}
+    if [ $_status -ne 0 ]; then
+        nef_fatal "MySQL query failed with status $_status"
+    fi
+}
+
 # Install required Debian packages
 _packages=
 _packages="$_packages nginx mysql-server"
@@ -23,9 +32,13 @@ else
 fi
 
 # Create MySQL database and user for ClipperZ
-echo "CREATE DATABASE IF NOT EXISTS clipperz " | mysql
-echo "CREATE USER 'clipperz' IDENTIFIED BY 'clipperz'" | mysql
-echo "GRANT ALL PRIVILEGES ON clipperz . * TO 'clipperz' " | mysql
+mysql_run "CREATE DATABASE IF NOT EXISTS clipperz"
+_count=$(mysql_run "SELECT User FROM mysql.user WHERE User = 'clipperz'" | grep ^clipperz | wc -l)
+if [ $_count -eq 0 ]; then
+    mysql_run "CREATE USER 'clipperz' IDENTIFIED BY 'clipperz'"
+    mysql_run "GRANT ALL PRIVILEGES ON clipperz . \* TO 'clipperz' "
+    mysql_run "FLUSH PRIVILEGES"
+fi
 
 # Build ClipperZ out of upstream repository
 if [ ! -d $GITTED_CLIPPERZ_ROOT_DIR ]; then
