@@ -20,7 +20,7 @@ mysql_run() {
 # Install required Debian packages
 _packages=
 _packages="$_packages nginx mysql-server"
-_packages="$_packages php5-fpm"                 # for PHP back-end
+_packages="$_packages php5-fpm php5-mysql"      # for PHP back-end
 _packages="$_packages python"                   # for Python back-end
 _packages="$_packages python-git"               # for build scripts
 sysconf_require_packages $_packages
@@ -58,8 +58,8 @@ fi
 mysql_run "CREATE DATABASE IF NOT EXISTS clipperz"
 _count=$(mysql_run "SELECT User FROM mysql.user WHERE User = 'clipperz'" | grep ^clipperz | wc -l)
 if [ $_count -eq 0 ]; then
-    mysql_run "CREATE USER 'clipperz' IDENTIFIED BY 'clipperz'"
-    mysql_run "GRANT ALL PRIVILEGES ON clipperz.\* TO 'clipperz' "
+    mysql_run "CREATE USER 'clipperz'@'%' IDENTIFIED BY 'clipperz'"
+    mysql_run "GRANT ALL PRIVILEGES ON clipperz.* TO 'clipperz' "
     mysql_run "FLUSH PRIVILEGES"
 fi
 
