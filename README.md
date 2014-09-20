@@ -14,6 +14,7 @@ This repository contains:
   with MySQL, Nginx, php5-fpm and settings for import/export the
   data.
 
+
 ## Get started
 
 **You don't need to be root!** but you need [Git](http://git-scm.com/)
@@ -27,3 +28,18 @@ sysconf/gitted-client register && sysconf/gitted-client add gitted-clipperz
 git push gitted-clipperz master
 ```
 
+The ```git push gitted-clipperz master``` command creates the LXC
+container, install ClipperZ and the required packages (from
+```sysconf/```) and import the data (from ```mysql/```).
+
+
+### Export / backup changes
+
+From the ```data-clipperz``` directory you have cloned:
+```
+git pull gitted-clipperz master
+```
+
+It's as simple as that. Now you can make a ```git push origin
+master``` to propagate the changes to the upstream remote, or any
+other remote, as usual with Git.
