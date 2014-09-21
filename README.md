@@ -6,9 +6,9 @@ Data is stored in a MySQL database and the PHP app does not manipulate
 any clear data, as data is decrypted by the client Javascript.
 
 This repository contains:
-* ```mysql```: MySQL dumps of ClipperZ data
+* ```mysql/``` : MySQL dumps of ClipperZ demo data
 
-* ```sysconf```: [Sysconf](https://github.com/geonef/sysconf.base/)
+* ```sysconf/``` : [Sysconf](https://github.com/geonef/sysconf.base/)
   definition to build the
   [Gitted](https://github.com/geonef/sysconf.gitted)-enabled system
   with MySQL, Nginx, php5-fpm and settings for import/export the
