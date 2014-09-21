@@ -28,10 +28,9 @@ sysconf/gitted-client register && sysconf/gitted-client add gitted-clipperz
 git push gitted-clipperz master
 ```
 
-The ```git push gitted-clipperz master``` command creates the LXC
-container ```gitted-clipperz```, install ClipperZ and the required
-packages (from ```sysconf/```) and import the data (from
-```mysql/```).
+The last command creates the LXC container ```gitted-clipperz```,
+install ClipperZ and the required packages (from ```sysconf/```) and
+import the data (from ```mysql/```).
 
 
 ### Export / backup changes
