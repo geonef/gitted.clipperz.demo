@@ -1,8 +1,20 @@
-# Installer script for sysconf "actual"  -*- shell-script -*-
+# Installer script for sysconf profile "actual" of gitted.clipperz  -*- shell-script -*-
+#
+# This install and configures:
+#   - MySQL server
+#   - PHP with php-fpm
+#   - Nginx HTTP server with the ClipperZ vhost
+#
+# As we had problems with the latest ClipperZ version, some lines are
+# commented and we use a legacy version that is included in sysconf:
+# ./tree/var/lib/clipperz-legacy
+#
 
 . /usr/lib/sysconf.base/common.sh
 
+################################################################################
 # A few settings
+#
 # (commented out as we're using clipperz-legacy)
 # GITTED_CLIPPERZ_ROOT_DIR=/var/lib/clipperz
 # GITTED_CLIPPERZ_UPSTREAM_URL=https://github.com/clipperz/password-manager.git
@@ -18,12 +30,14 @@ mysql_run() {
     fi
 }
 
+################################################################################
 # Install required Debian packages
+#
 _packages=
 _packages="$_packages nginx mysql-server"
 _packages="$_packages php5-fpm php5-mysql"      # for PHP back-end
-_packages="$_packages python"                   # for Python back-end
-_packages="$_packages python-git"               # for build scripts
+# _packages="$_packages python"                   # for Python back-end
+# _packages="$_packages python-git"               # for build scripts
 sysconf_require_packages $_packages
 
 # Fix Nginx
@@ -55,7 +69,9 @@ else
 fi
 
 
+################################################################################
 # Create MySQL database and user for ClipperZ
+#
 mysql_run "CREATE DATABASE IF NOT EXISTS clipperz"
 _count=$(mysql_run "SELECT User FROM mysql.user WHERE User = 'clipperz'" | grep ^clipperz | wc -l)
 if [ $_count -eq 0 ]; then
@@ -63,14 +79,21 @@ if [ $_count -eq 0 ]; then
     mysql_run "GRANT ALL PRIVILEGES ON clipperz.* TO 'clipperz' "
     mysql_run "FLUSH PRIVILEGES"
 fi
-_count=$(echo "SHOW TABLES" | mysql clipperz | tail -n +2 | wc -l)
-if [ $_count -eq 0 ]; then
-    echo "Populating MySQL database: clipperz"
-    cat /var/lib/clipperz-legacy/database.structure.sql | mysql clipperz
-fi
 
+# Empty tables should not be created now: they are imported
+# as specified in /etc/gitted/sync/master.import
+
+# _count=$(echo "SHOW TABLES" | mysql clipperz | tail -n +2 | wc -l)
+# if [ $_count -eq 0 ]; then
+#     echo "Populating MySQL database: clipperz"
+#     cat /var/lib/clipperz-legacy/database.structure.sql | mysql clipperz
+# fi
+
+
+################################################################################
 # Build ClipperZ out of upstream repository
 # (commented out as we're using clipperz-legacy)
+#
 # if [ ! -d $GITTED_CLIPPERZ_ROOT_DIR ]; then
 #     git clone -b $GITTED_CLIPPERZ_UPSTREAM_REF \
 #         $GITTED_CLIPPERZ_UPSTREAM_URL $GITTED_CLIPPERZ_ROOT_DIR \
