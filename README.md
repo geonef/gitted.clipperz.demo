@@ -32,6 +32,12 @@ The last command creates the LXC container ```gitted-clipperz```,
 install ClipperZ and the required packages (from ```sysconf/```) and
 import the data (from ```mysql/```).
 
+To access the web app, open a brother tab on:
+```
+http://10.0.3.8/
+```
+... where ```10.0.3.8``` is to be replaced with the IP of the container ```gitted-clipperz``` (read it from the ```push``` messages or with ```lxc-ls -f```).
+
 
 ### Export / backup changes
 
