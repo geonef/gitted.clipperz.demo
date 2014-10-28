@@ -23,7 +23,7 @@ system. See [Gitted](https://github.com/geonef/sysconf.gitted) for
 more information.
 
 ```
-git clone https://github.com/jfgigand/data-clipperz.git && cd data-clipperz
+git clone https://github.com/geonef/data-clipperz.git && cd data-clipperz
 sysconf/gitted-client register && sysconf/gitted-client add gitted-clipperz
 git push gitted-clipperz master
 ```
@@ -38,6 +38,7 @@ http://10.0.3.8/
 ```
 ... where ```10.0.3.8``` is to be replaced with the IP of the container ```gitted-clipperz``` (read it from the ```push``` messages or with ```lxc-ls -f```).
 
+* Try the **demo** account: ```test``` / ```test```
 
 ### Export / backup changes
 
